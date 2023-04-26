@@ -16,6 +16,29 @@ import itertools
 
 class Agent:
 
+    """ The class Agent saves all information about the agent. The closed loop information, properties as functions:
+    learn and optimal functions for FPD.
+
+    ss....number of states of the system
+    aa....number of actions of the system
+    h....horizon of FPD
+    w....weight balancing two preferences
+    s0...the initial state
+    nu....the parameter of exploration
+    si....the preferred state
+    ai....the preferred action
+    alfa....variable that needs to be optimized for finding ideal model
+    sigma....parameter for creating model
+    gam....function for FPD r_opt = ri*exp(d)/gam
+    model....model of the system
+    r....decision rule
+    mi....ideal model of the system
+    ri....ideal decision rule
+    V....variable for learning model
+    r_side....right side of the equation
+
+        """
+
     def __init__(self, ss: int, aa: int, h: int, w: int, s0: int, nu: int, si: int, ai: np.ndarray, alfa: np.ndarray,
                  sigma: int) -> None:
         self.ss = ss

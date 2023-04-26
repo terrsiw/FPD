@@ -4,13 +4,29 @@ from scipy.optimize import fsolve
 import pickle
 
 
-# import csv
-# import math
-
-
-# from scipy.stats import norm
-# from scipy.stats import expon
 class Agent:
+    """The class Agent saves all information about the agent. The closed loop information, properties as functions:
+    learn and optimal functions for FPD.
+
+    ss....number of states of the system
+    aa....number of actions of the system
+    h....horizon of FPD
+    w....weight balancing two preferences
+    s0...the initial state
+    nu....the parameter of exploration
+    si....the preferred state
+    ai....the preferred action
+    alfa....variable that needs to be optimized for finding ideal model
+    sigma....parameter for creating model
+    gam....function for FPD r_opt = ri*exp(d)/gam
+    model....model of the system
+    r....decision rule
+    mi....ideal model of the system
+    ri....ideal decision rule
+    V....variable for learning model
+    r_side....right side of the equation
+
+        """
 
     def __init__(self, ss: int, aa: int, h: int, w: int, s0: int, nu: int, si: int, ai: np.ndarray, alfa: np.ndarray,
                  sigma: int) -> None:
@@ -26,13 +42,18 @@ class Agent:
         self.sigma = sigma
         self.gam = np.ones(ss)
         self.model = self.create_model()
+        self.r = np.ones((self.aa, self.ss)) / self.aa
         self.mi = np.ones((self.ss, self.aa, self.ss)) / self.ss
         self.ri = np.ones((self.aa, self.ss)) / self.aa
-        self.r = np.ones((self.aa, self.ss)) / self.aa
         self.V = np.ones((self.ss, self.aa, self.ss))
         self.r_side = np.zeros(self.aa)
 
     def create_model(self):
+        """ Create Model:
+        create probability model with Gauss distribution and then normalization
+
+        :return: model
+        """
 
         model = np.ones(tuple([self.ss, self.aa, self.ss], ))
 
@@ -46,6 +67,11 @@ class Agent:
         return model
 
     def normalize_proba_model(self, model):
+        """ Normalize Model:
+                Normalization of the created model
+
+                :return: model
+                """
         for s1 in range(self.ss):
             for a in range(self.aa):
                 model[:, a, s1] = model[:, a, s1] / np.sum(model[:, a, s1])
@@ -53,6 +79,12 @@ class Agent:
         return model
 
     def learn(self, data2):
+        """ Learn the system and saves it to the model of the system
+
+
+        :param data2: the structure where we save the data: observed states and chose actions
+        :return: model
+        """
         s = data2.states[data2.t]
         a = data2.actions[data2.t - 1]
         s1 = data2.states[data2.t - 1]
@@ -64,22 +96,50 @@ class Agent:
             self.V[:, a.astype(np.int64), s1.astype(np.int64)])
 
     def opt_mi(self, a, s1):
+        """ Calculating the ideal model
+
+        :param a: action
+        :param s1: state
+        :return: mi: ideal model
+        """
 
         for s in range(self.ss):
             self.mi[s, a, s1] = self.model[s, a, s1] * np.exp(-self.alfa[a, s1] * self.model[s, a, s1])
 
     def opt_mio(self, a, s1, o):
+        """ Calculating the ideal model when we have uniform distributed model
+
+        :param a: action
+        :param s1: state
+        :param o: auxiliary variable
+        :return: mi: ideal model
+        """
 
         for s in range(self.ss):
             self.mi[s, a, s1] = np.exp(-self.alfa[a, s1] * o[s, a, s1])
 
     def opt_ri(self, s1, d):
+        """ Calculating the ideal decision rule
+
+        :param s1: state
+        :param d: a variable need for FPD
+        :return: ri: ideal decision rule
+        """
         for a in range(self.aa):
             self.ri[a, s1] = np.exp(-self.nu * d[a, s1])
 
         self.ri[:, s1] = self.ri[:, s1] / np.sum(self.ri[:, s1])
 
     def opt_function(self, alfa_var, lambda_var, a, s1, r_side):
+        """ The function that is optimized by fsolve. We try to find the best alfa_var to f = 0.
+
+        :param alfa_var: the parameter that is chosen to optimize the f
+        :param lambda_var: an auxiliary variable for left_side=right_side
+        :param a: action
+        :param s1: state
+        :param r_side: right side of the equation for optimization
+        :return: f : we want to 0
+        """
         l_side = alfa_var * lambda_var[a, s1] + np.log(
             np.sum(self.model[:, a, s1] * np.exp(-alfa_var * self.model[:, a, s1])))
         f = l_side - r_side
@@ -87,6 +147,17 @@ class Agent:
         return f
 
     def opto_function(self, alfa_var, a, s1, r_side, o):
+        """ The function that is optimized by fsolve for uniform distributed model .
+        We try to find the best alfa_var to f = 0.
+
+
+        :param alfa_var: the parameter that is chosen to optimize the f
+        :param a: action
+        :param s1: state
+        :param r_side: right side of the equation for optimization
+        :param o: an auxiliary variable for uniform distributed model
+        :return: f : we want to 0
+        """
         l_side = np.log(np.sum(np.exp(-alfa_var * o[:, a, s1])) / self.ss)
 
         f = l_side - r_side
@@ -94,6 +165,10 @@ class Agent:
         return f
 
     def calculate_alfa(self):
+        """ Calculate alfa (optimize it and use it for ideal model, using fsolve) and also FPD algorithm.
+
+        :return: optimized ideal distribution and decision rule
+        """
         lambda_var = np.zeros((self.aa, self.ss))
         rho = np.zeros((self.aa, self.ss))
         rho_max = np.zeros(self.ss)
@@ -197,16 +272,8 @@ def simulate_system(ss: int, aa: int):
         for s1 in range(ss):
             V[:, at, s1] = V[:, at, s1] / np.sum(V[:, at, s1])
 
-        # pocets = np.zeros(ss)
-        # poceta = np.zeros(aa)
-        #
-        # for j in range(ss):
-        #     pocets[j] = np.sum(yy[:] == j)
-        #
-        # for k in range(aa):
-        #     poceta[k] = np.sum(yy[:] == k)
     with open("data_system", "wb") as f:
-         pickle.dump(V, f, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(V, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     return V
 
