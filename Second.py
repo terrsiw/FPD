@@ -84,12 +84,10 @@ class Agent:
         s = data2.states[data2.t]
         a = data2.actions[data2.t - 1]
         s1 = data2.states[data2.t - 1]
-        self.V[s.astype(np.int64), a.astype(np.int64), s1.astype(np.int64)] = self.V[s.astype(np.int64), a.astype(
-            np.int64), s1.astype(np.int64)] + 1
+        self.V[s, a, s1] = self.V[s, a, s1] + 1
 
-        self.model[:, a.astype(np.int64), s1.astype(np.int64)] = self.V[:, a.astype(np.int64),
-                                                                 s1.astype(np.int64)] / np.sum(
-            self.V[:, a.astype(np.int64), s1.astype(np.int64)])
+        self.model[:, a, s1] = self.V[:, a, s1] / np.sum(
+            self.V[:, a, s1])
 
     def opt_mi(self, a, s1):
 
@@ -186,22 +184,22 @@ class Data2:
 
     def __init__(self, length_sim: int, s0: int, length_time=None, w=None, nu=None):
         if length_time is None:
-            self.states = np.zeros(length_sim + 2)
-            self.actions = np.zeros(length_sim + 1)
+            self.states = list()
+            self.states.append(s0)
+            self.actions = list()
             self.length_sim = length_sim
-            self.states[0] = s0
             self.t = 0
         else:
-            self.states = np.zeros(int(length_sim / length_time + 2))
-            self.actions = np.zeros(int(length_sim / length_time + 1))
-            self.marks = np.zeros(int(length_sim / length_time + 1))
+            self.states = list()
+            self.states.append(s0)
+            self.actions = list()
+            self.marks = list()
+            self.marks.append(3)
             self.length_sim = length_time
-            self.states[0] = s0
-            self.marks[0] = 3
-            self.w = np.zeros(int(length_sim / length_time + 1))
-            self.nu = np.zeros(int(length_sim / length_time + 1))
-            self.w[0] = w
-            self.nu[0] = nu
+            self.w = list()
+            self.w.append(w)
+            self.nu = list()
+            self.nu.append(nu)
             self.t = 0
 
 
@@ -251,7 +249,7 @@ class System:
                 B_0 = b0 / (1 + y[t - 1])
                 B_1 = b1 / (1 + y[t - 1])
                 y[t] = A * y[t - 1] + B_0 * (a[t] - self.aa / 2) + B_1 * (
-                            a[t - 1] - self.aa / 2) + var * np.random.normal(
+                        a[t - 1] - self.aa / 2) + var * np.random.normal(
                     0, 1, 1)
                 a[t + 1] = dnoise(ra) + 1
                 BB0[t - 1] = B_0
@@ -283,18 +281,18 @@ class System:
 
     def generate(self, agent, data2):
         s1 = data2.states[data2.t]
-        a = dnoise(agent.r[:, s1.astype(np.int64)])
-        m = self.sim_system[:, a, s1.astype(np.int64)]
-        data2.states[data2.t + 1] = dnoise(m)
-        data2.actions[data2.t] = a
+        a = dnoise(agent.r[:, s1])
+        m = self.sim_system[:, a, s1]
+        data2.states.append(dnoise(m))
+        data2.actions.append(a)
         data2.t = data2.t + 1
 
         return data2
 
     def generate_second(self, agent, data2, user, data1):
         s1 = data1.states[data1.t]
-        a = dnoise(user.r[:, s1.astype(np.int64)])
-        data1.actions[data1.t] = a
+        a = dnoise(user.r[:, s1])
+        data1.actions.append(a)
         data1, data2, agent = self.small_loop(agent, data2, data1)
         print(data2.states[(data2.t - data1.length_sim):data2.t])
         print(data2.actions[(data2.t - data1.length_sim):data2.t - 1])
@@ -315,8 +313,8 @@ class System:
         if m - int(k) == 0:
             mm = 1
 
-        data1.marks[data1.t + 1] = m
-        data1.states[data1.t + 1] = mm
+        data1.marks.append(m)
+        data1.states.append(mm)
 
         data1.t = data1.t + 1
 
@@ -347,8 +345,8 @@ def calculate_parameters(agent, data1):
     if agent.nu < 0.1:
         agent.nu = 1
 
-    data1.w[data1.t + 1] = agent.w
-    data1.nu[data1.t + 1] = agent.nu
+    data1.w.append(agent.w)
+    data1.nu.append(agent.nu)
 
     return data1
 

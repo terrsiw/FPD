@@ -5,7 +5,7 @@ from dash import callback, Input, Output
 import json
 import pandas as pd
 
-from Second_closed_loop import *
+from Second import *
 
 # from FPD_functions import *
 
@@ -24,10 +24,10 @@ df = px.data.gapminder()
 
 layout = html.Div(
     [
-        # html.Button('Run', id='submit-val', n_clicks=0),
+        html.Button('Run', id='submit-val', n_clicks=0),
         html.Div(
-            dcc.Slider(0, 100, 10,
-                       value=10,
+            dcc.Slider(1, 5, 1,
+                       value=3,
                        id='my_slider'
                        )),
         html.Br(),
@@ -37,28 +37,59 @@ layout = html.Div(
         html.Div(
             dcc.Graph(id='bar_hist_actions')),
 
-        # dcc.Store(id='store-data', data=[], storage_type='memory')
+        dcc.Store(id='store-data', data=[], storage_type='memory'),
+        dcc.Store(id='store-data2', data=[], storage_type='memory')
 
     ]
 )
 
 
-# @callback(
-#     Output('store-data', 'data'),
-#     Input('submit-val', 'n_clicks')
-# )
-# def store_data(n_clicks):
-#     agent, data2, system = main(10, "FALSE")
-#
-#     # data_stored = [agent, data2, system]
-#     # datasets = {
-#     #     'df_1': json.dumps(agent.__dict__),
-#     #     # 'df_2': data2.to_json(orient='split', date_format='iso'),
-#     #     # 'df_3': system.to_json(orient='split', date_format='iso'),
-#     # }
-#     #
-#     dataset = json.dumps(data2.__dict__),
-#     return dataset #json.dumps(datasets)
+@callback(
+    Output('store-data', 'data'),
+    Input('submit-val', 'n_clicks')
+)
+def store_data(n_clicks):
+    var_init = initialization(500, "FALSE", 10)
+    system = var_init[0]
+    agent = var_init[1]
+    data2 = var_init[2]
+    user = var_init[3]
+    data1 = var_init[4]
+
+    if data1.t <= data2.length_sim / data1.length_sim:
+        user.calculate_alfa()
+        s1 = data1.states[data1.t]
+        a = dnoise(user.r[:, s1])
+        data1.actions.append(a)
+        data1, data2, agent = system.small_loop(agent, data2, data1)
+
+    w = agent.w
+    # s0 = data2.states[data2.t]
+    nu = agent.nu
+    gam = agent.gam
+    model = agent.model
+    mi = agent.mi
+    ri = agent.ri
+    r = agent.r
+    V = agent.V
+    data_states = data2.states
+    data_actions = data2.actions
+    data_t = data2.t
+    data1_states = data1.states
+    data1_actions = data1.actions
+    data1_marks = data1.marks
+    data1_t = data1.t
+    user_gam = user.gam
+    user_model = user.model
+    user_mi = user.mi
+    user_ri = user.ri
+    user_r = user.r
+    user_V = user.V
+
+    obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states, data1_actions,
+                      data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V]
+
+    return obj_store_data
 
 
 # @callback(
@@ -74,16 +105,64 @@ layout = html.Div(
 @callback([
     Output(component_id='bar_hist_states', component_property='figure'),
     Output(component_id='bar_hist_actions', component_property='figure'),
-], [Input(component_id='my_slider', component_property='value')]
+],
+    [Input('store-data', 'data')]
+    # [Input(component_id='my_slider', component_property='value')]
 )
-def update_figure(value):
-    agent, data2, system = main(value, "FALSE")
+def update_figure(data):
+    # var_init = initialization(500, "FALSE", 10)
+    # system = var_init[0]
+    # agent = var_init[1]
+    # data2 = var_init[2]
+    # user = var_init[3]
+    # data1 = var_init[4]
+    #
+    # if data1.t <= data2.length_sim / data1.length_sim:
+    #     user.calculate_alfa()
+    #     s1 = data1.states[data1.t]
+    #     a = dnoise(user.r[:, s1])
+    #     data1.actions.append(a)
+    #     data1, data2, agent = system.small_loop(agent, data2, data1)
 
-    data_states = data2.states
-    data_actions = data2.actions
+    # agent, data2, system = main(value, "FALSE")
+
+    var_init = initialization(500, "FALSE", 10)
+    system = var_init[0]
+    agent = var_init[1]
+    data2 = var_init[2]
+    user = var_init[3]
+    data1 = var_init[4]
+
+    agent.w = data[0]
+    agent.nu = data[1]
+    agent.gam = data[2]
+    agent.model = data[3]
+    agent.mi = data[4]
+    agent.ri = data[5]
+    agent.r = data[6]
+    agent.V = data[7]
+    data2.states = data[8]
+    data2.actions = data[9]
+    data2.t = data[10]
+    data1.states = data[11]
+    data1.actions = data[12]
+    data1.marks = data[13]
+    data1.t = data[14]
+    user.gam = data[15]
+    user.model = data[16]
+    user.mi = data[17]
+    user.ri = data[18]
+    user.r = data[19]
+    user.V = data[20]
+
+    data_states = data2.states[(data2.t - data1.length_sim):data2.t]
+    data_actions = data2.actions[(data2.t - data1.length_sim):data2.t - 1]
 
     number_of_s = np.zeros(agent.ss)
     number_of_a = np.zeros(agent.aa)
+
+    data_states = np.array(data_states)
+    data_actions = np.array(data_actions)
 
     for j in range(agent.ss):
         number_of_s[j] = np.sum(data_states[:] == j)
@@ -108,6 +187,190 @@ def update_figure(value):
     bar_hist_actions.update_layout(transition_duration=500)
 
     return [bar_hist_states, bar_hist_actions]
+
+
+# @callback(
+#     Output('store-data2', 'data'),
+#     [Input('store-data', 'data'),
+#      Input('my_slider', 'value')]
+# )
+# def store_data2(value, data):
+#     var_init = initialization(500, "FALSE", 10)
+#     system = var_init[0]
+#     agent = var_init[1]
+#     data2 = var_init[2]
+#     user = var_init[3]
+#     data1 = var_init[4]
+#
+#     agent.w = data[0]
+#     agent.nu = data[1]
+#     agent.gam = data[2]
+#     agent.model = data[3]
+#     agent.mi = data[4]
+#     agent.ri = data[5]
+#     agent.r = data[6]
+#     agent.V = data[7]
+#     data2.states = data[8]
+#     data2.actions = data[9]
+#     data2.t = data[10]
+#     data1.states = data[11]
+#     data1.actions = data[12]
+#     data1.marks = data[13]
+#     data1.t = data[14]
+#     user.gam = data[15]
+#     user.model = data[16]
+#     user.mi = data[17]
+#     user.ri = data[18]
+#     user.r = data[19]
+#     user.V = data[20]
+#
+#     m = value
+#     mm = 0
+#     if m == 0:
+#         m = data1.marks[data1.t]
+#
+#     k = int(data1.marks[data1.t])
+#     if m - int(k) > 0:
+#         mm = 2
+#     if m - int(k) < 0:
+#         mm = 0
+#     if m - int(k) == 0:
+#         mm = 1
+#
+#     data1.marks.append(m)
+#     data1.states.append(mm)
+#
+#     data1.t = data1.t + 1
+#     user.learn(data1)
+#
+#     if data1.t <= data2.length_sim / data1.length_sim:
+#         user.calculate_alfa()
+#         s1 = data1.states[data1.t]
+#         a = dnoise(user.r[:, s1])
+#         data1.actions.append(a)
+#         data1, data2, agent = system.small_loop(agent, data2, data1)
+#
+#     w = agent.w
+#     # s0 = data2.states[data2.t]
+#     nu = agent.nu
+#     gam = agent.gam
+#     model = agent.model
+#     mi = agent.mi
+#     ri = agent.ri
+#     r = agent.r
+#     V = agent.V
+#     data_states = data2.states
+#     data_actions = data2.actions
+#     data_t = data2.t
+#     data1_states = data1.states
+#     data1_actions = data1.actions
+#     data1_marks = data1.marks
+#     data1_t = data1.t
+#     user_gam = user.gam
+#     user_model = user.model
+#     user_mi = user.mi
+#     user_ri = user.ri
+#     user_r = user.r
+#     user_V = user.V
+#
+#     obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states, data1_actions,
+#                       data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V]
+#
+#     return obj_store_data
+
+# @callback([
+#     Output(component_id='bar_hist_states', component_property='figure'),
+#     Output(component_id='bar_hist_actions', component_property='figure'),
+# ],
+#
+#     [Input(component_id='my_slider', component_property='value')]
+# )
+# def improvement(value):
+#     var_init = initialization(500, "FALSE", 10)
+#     system = var_init[0]
+#     agent = var_init[1]
+#     data2 = var_init[2]
+#     user = var_init[3]
+#     data1 = var_init[4]
+#
+#
+#     agent.w = w
+#     agent.s0 = s0
+#     agent.nu = nu
+#     agent.gam = gam
+#     agent.model = model
+#     agent.mi = mi
+#     agent.ri = ri
+#     agent.r = r
+#     agent.V = V
+#     data2.states = data_states
+#     data2.actions = data_actions
+#     data2.t = data_t
+#     data1.states = data1_states
+#     data1.actions = data1_actions
+#     data1.marks = data1_marks
+#     data1.t = data1_t
+#
+#
+#     m = value
+#     mm = 0
+#     if m == 0:
+#         m = data1.marks[data1.t]
+#     k = int(data1.marks[data1.t])
+#
+#     if m - int(k) > 0:
+#         mm = 2
+#     if m - int(k) < 0:
+#         mm = 0
+#     if m - int(k) == 0:
+#         mm = 1
+#
+#     data1.marks.append(m)
+#     data1.states.append(mm)
+#
+#     data1.t = data1.t + 1
+#
+#     if data1.t <= data2.length_sim / data1.length_sim:
+#         user.calculate_alfa()
+#         s1 = data1.states[data1.t]
+#         a = dnoise(user.r[:, s1])
+#         data1.actions.append(a)
+#         data1, data2, agent = system.small_loop(agent, data2, data1)
+#
+#     # agent, data2, system = main(value, "FALSE")
+#
+#     data_states = data2.states[(data2.t - data1.length_sim):data2.t]
+#     data_actions = data2.actions[(data2.t - data1.length_sim):data2.t - 1]
+#
+#     number_of_s = np.zeros(agent.ss)
+#     number_of_a = np.zeros(agent.aa)
+#
+#     data_states = np.array(data_states)
+#     data_actions = np.array(data_actions)
+#
+#     for j in range(agent.ss):
+#         number_of_s[j] = np.sum(data_states[:] == j)
+#
+#     for k in range(agent.aa):
+#         number_of_a[k] = np.sum(data_actions[:] == k)
+#
+#     data_state = {'States': list(np.arange(0, agent.ss)),
+#                   'Number of states': number_of_s}
+#
+#     data_action = {'Actions': list(np.arange(0, agent.aa)),
+#                    'Number of actions': number_of_a}
+#
+#     df_s = pd.DataFrame(data_state)
+#     # print(df_s)
+#     df_a = pd.DataFrame(data_action)
+#     # df_s = load_object("data_states")
+#     bar_hist_states = px.bar(df_s, x='States', y='Number of states')
+#     bar_hist_actions = px.bar(df_a, x='Actions', y='Number of actions')
+#
+#     bar_hist_states.update_layout(transition_duration=500)
+#     bar_hist_actions.update_layout(transition_duration=500)
+#
+#     return [bar_hist_states, bar_hist_actions]
 
 # from demo_utils import demo_callbacks, demo_explanation
 
