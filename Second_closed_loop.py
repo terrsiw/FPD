@@ -1,10 +1,12 @@
 import random
+# from dash import dcc
 
 # import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import fsolve
 import pickle
 import itertools
+import json
 
 
 # import csv
@@ -299,13 +301,13 @@ class System:
         print('How do you like the sequence? = ')
         m = input()
         # m = 0
-
+        m = int(m)
         mm = 0
         if m == 0:
             m = data1.marks[data1.t]
         k = int(data1.marks[data1.t])
 
-        m = int(m)
+
         if m - int(k) > 0:
             mm = 2
         if m - int(k) < 0:
@@ -434,3 +436,5 @@ def load_object(filename: object) -> object:
             return pickle.load(f)
     except Exception as ex:
         print("Error during unpickling object (Possibly unsupported):", ex)
+
+

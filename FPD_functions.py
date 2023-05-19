@@ -2,6 +2,7 @@ import random
 import numpy as np
 from scipy.optimize import fsolve
 import pickle
+import json
 
 
 class Agent:
@@ -237,6 +238,10 @@ class Data2:
         self.length_sim = length_sim
         self.states[0] = s0
         self.t = 0
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
 
 
 def simulate_system(ss: int, aa: int):
