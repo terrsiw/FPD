@@ -294,6 +294,7 @@ class System:
         a = dnoise(user.r[:, s1])
         data1.actions.append(a)
         data1, data2, agent = self.small_loop(agent, data2, data1)
+
         print(data2.states[(data2.t - data1.length_sim):data2.t])
         print(data2.actions[(data2.t - data1.length_sim):data2.t - 1])
 
