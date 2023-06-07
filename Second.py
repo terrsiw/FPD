@@ -227,7 +227,6 @@ class System:
         self.sim_system = self.simulate_system(create_system)
 
     def simulate_system(self, create_system):
-
         if create_system == "FALSE":
             V = load_object("data_system")
         else:
@@ -274,8 +273,8 @@ class System:
                 #
                 # for k in range(aa):
                 #     poceta[k] = np.sum(yy[:] == k)
-        with open("data_system", "wb") as f:
-            pickle.dump(V, f, protocol=pickle.HIGHEST_PROTOCOL)
+            with open("data_system", "wb") as f:
+                pickle.dump(V, f, protocol=pickle.HIGHEST_PROTOCOL)
 
         return V
 

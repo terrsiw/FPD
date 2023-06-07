@@ -25,54 +25,62 @@ from Second import *
 dash.register_page(__name__)
 df = px.data.gapminder()
 
-layout = html.Div(
-    [html.Div(id='button-container', children=[
-        html.Button('Run', id='submit-val', n_clicks=0)], style={'display': 'block'}),
-     html.Div(id='slider-container', children=[
-         dcc.Slider(1, 5, 1,
-                    value=None,
-                    id='my_slider'
-                    )],
-              style={'display': 'none'}
+layout = html.Div([
+    html.Div(
+        dcc.Link('Go to Page 3', href='/page3'),
+        style={'text-align': 'right', 'margin-right': '20px'}
+    ),
+    html.Button('Run', id='submit-val', n_clicks=0, disabled=False),
+    # html.Div(id='button-container', children=[
+    #     html.Button('Run', id='submit-val', n_clicks=0)],
+    #          style={'display': 'block'}
+    #          ),
+    html.Div(id='slider-container', children=[
+        dcc.Slider(1, 5, 1,
+                   value=None,
+                   id='my_slider'
+                   )],
+             style={'display': 'none'}
+             ),
+    html.Div(id='button2-container', children=[
+        html.Button('Leave the same mark', id='mark_button', n_clicks=0)], style={'display': 'none'}),
+    html.Br(),
+    html.Div(
+        dcc.Graph(id='bar_hist_states'),
+        style={'width': '50%', 'display': 'inline-block'}),
+    html.Div(
+        dcc.Graph(id='bar_hist_actions'),
+        style={'width': '50%', 'display': 'inline-block'}),
+    html.Br(),
+    html.Div(
+        dcc.Graph(id='plot_states'),
+        style={'width': '50%', 'display': 'inline-block'}),
+    html.Div(
+        dcc.Graph(id='plot_actions'),
+        style={'width': '50%', 'display': 'inline-block'}),
+    # dcc.Store(id='my-data-store', storage_type='memory')
+    dcc.Store(id='store-data', data=[], storage_type='memory'),
+    #dcc.Location(id='url', refresh=True)
+    # dcc.Store(id='store-data2', data=[], storage_type='memory')
 
-              ),
-     html.Div(id='button2-container', children=[
-         html.Button('Leave the same mark', id='mark_button', n_clicks=0)], style={'display': 'none'}),
-     html.Br(),
-     html.Div(
-         dcc.Graph(id='bar_hist_states'),
-         style={'width': '50%', 'display': 'inline-block'}),
-     html.Div(
-         dcc.Graph(id='bar_hist_actions'),
-         style={'width': '50%', 'display': 'inline-block'}),
-     html.Br(),
-     html.Div(
-         dcc.Graph(id='plot_states'),
-         style={'width': '50%', 'display': 'inline-block'}),
-     html.Div(
-         dcc.Graph(id='plot_actions'),
-         style={'width': '50%', 'display': 'inline-block'}),
-     dcc.Store(id='store-data', data=[], storage_type='memory'),
-     dcc.Store(id='store-data2', data=[], storage_type='memory')
-
-     ]
+]
 )
 
 
 @callback(
-    Output('store-data', 'data'),
+    [Output('store-data', 'data'),
+     Output('submit-val', 'disabled')],
     [Input('submit-val', 'n_clicks'),
      Input('store-data', 'data'),
      Input('my_slider', 'value'),
-     Input('mark_button', 'n_clicks')],
-
-
+     Input('mark_button', 'n_clicks')  # Input('url', 'pathname')
+     ],
 )
 def store_data(n_clicks, data, value, mark_clicks):
     ctx = dash.callback_context
     triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
     if n_clicks is not None and n_clicks != 0 and not data and value is None:
-        var_init = initialization(500, "FALSE", 10)
+        var_init = initialization(500, "FALSE", 20)
         system = var_init[0]
         agent = var_init[1]
         data2 = var_init[2]
@@ -113,11 +121,11 @@ def store_data(n_clicks, data, value, mark_clicks):
                           data1_actions,
                           data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V]
 
-        return obj_store_data
+        return obj_store_data, True
 
     elif n_clicks is not None and n_clicks != 0 and data and value is not None:
         if triggered_component == 'my_slider' or (triggered_component == 'mark_button' and mark_clicks > 0):
-            var_init = initialization(500, "FALSE", 10)
+            var_init = initialization(500, "FALSE", 20)
             system = var_init[0]
             agent = var_init[1]
             data2 = var_init[2]
@@ -198,10 +206,10 @@ def store_data(n_clicks, data, value, mark_clicks):
             obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states,
                               data1_actions,
                               data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V]
-            return obj_store_data
+            return obj_store_data, True
     else:
         raise PreventUpdate
-        return None
+    return PreventUpdate
 
 
 # @callback(
@@ -218,7 +226,7 @@ def store_data(n_clicks, data, value, mark_clicks):
     Output(component_id='bar_hist_states', component_property='figure'),
     Output(component_id='bar_hist_actions', component_property='figure'),
     Output(component_id='slider-container', component_property='style'),
-    Output(component_id='button-container', component_property='style'),
+    # Output(component_id='button-container', component_property='style'),
     Output(component_id='button2-container', component_property='style')
 ],
     [Input('store-data', 'data')]
@@ -226,7 +234,7 @@ def store_data(n_clicks, data, value, mark_clicks):
 )
 def update_figure(data):
     if data:
-        var_init = initialization(500, "FALSE", 10)
+        var_init = initialization(500, "FALSE", 20)
 
         agent = var_init[1]
         data2 = var_init[2]
@@ -271,10 +279,9 @@ def update_figure(data):
         bar_hist_states.update_layout(transition_duration=500)
         bar_hist_actions.update_layout(transition_duration=500)
 
-        return [bar_hist_states, bar_hist_actions, {'display': 'block'}, {'display': 'none'},{'display': 'block'}]
+        return [bar_hist_states, bar_hist_actions, {'display': 'block'}, {'display': 'block'}]
     else:
-        PreventUpdate
-        return None
+        return {}
 
 
 @callback([
@@ -286,7 +293,7 @@ def update_figure(data):
 )
 def update_plots(data):
     if data:
-        var_init = initialization(500, "FALSE", 10)
+        var_init = initialization(500, "FALSE", 20)
 
         agent = var_init[1]
         data2 = var_init[2]
@@ -303,10 +310,10 @@ def update_plots(data):
         data_states = data2.states[(data2.t - data1.length_sim):data2.t]
         data_actions = data2.actions[(data2.t - data1.length_sim):data2.t - 1]
 
-        data_state = {'Time steps': list(np.arange(0, 10)),
+        data_state = {'Time steps': list(np.arange(0, 20)),
                       'States': data_states}
 
-        data_action = {'Time steps': list(np.arange(0, 9)),
+        data_action = {'Time steps': list(np.arange(0, 19)),
                        'Actions': data_actions}
 
         df_s = pd.DataFrame(data_state)
@@ -333,6 +340,31 @@ def update_plots(data):
         PreventUpdate
         return None
 
+
+
+
+
+
+
+
+# @callback(Output('data-store', 'data'),
+#           [Input('url', 'pathname')])
+# def store_data_to3(pathname):
+#     # Perform data storage here
+#     data = {'message': 'Data from page 2'}
+#     return json.dumps(data)
+
+# @callback(
+#     Output('my-component', 'children'),
+#     [Input('my-data-store', 'data')]
+# )
+# def update_page(data):
+#     # Use the stored data to initialize or populate the components on the page
+#     if data is not None:
+#         # Do something with the data
+#         return html.Div('Stored Data: {}'.format(data))
+#     else:
+#         return html.Div('No data available')
 # @callback(
 #     Output('store-data', 'data'),
 #     [Input('my_slider', 'value'),
