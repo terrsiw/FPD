@@ -45,7 +45,8 @@ layout = html.Div([
                                  children=[
                                      dcc.Link('See the final results', href='/page3'),
                                  ],
-                                 style={'text-align': 'right', 'margin-right': '20px'}
+                                 style={'display': 'none'}
+                                 # style={'text-align': 'right', 'margin-right': '20px'}
                                  )),
                     dbc.Col(
                         dbc.Modal(
@@ -67,7 +68,6 @@ layout = html.Div([
                         width="auto",
                     ),
                 ]),
-            # html.P("This graph represents the distribution of states across the dataset."),
             dbc.Row(
                 [
                     dbc.Col(
@@ -170,6 +170,13 @@ layout = html.Div([
             ),
         ],
     ),
+    html.Br(),
+    html.Div(id='text-wait',
+             children=[
+                 html.P("Please, wait a while the simulation is running."),
+             ],
+             style={'display': 'none'}
+             ),
     html.Br(),
     html.P("There are the results of number of states and actions in last 20 time steps."),
     html.Div(
@@ -354,7 +361,7 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
             obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states,
                               data1_actions,
                               data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V, why]
-            return obj_store_data, True, {'display': 'none'} ,{'display': 'none'}
+            return obj_store_data, True, {'display': 'none'}, {'display': 'none'}
 
     elif n_clicks is not None and n_clicks != 0 and data and value is not None and \
             (m_clicks is not None and m_clicks != 0) or (mm_clicks is not None and mm_clicks != 0):
@@ -417,7 +424,7 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
 
         if m_clicks > 0:
             why = "liked it"
-        elif mm_clicks >0 :
+        elif mm_clicks > 0:
             why = "bored"
 
         obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states,
@@ -632,6 +639,25 @@ def update_plots(data):
         return [plot_states, plot_actions]
     else:
         raise PreventUpdate
+
+
+@callback(
+    Output('text-wait', 'style'),
+    [Input('button-1', 'n_clicks'),
+     Input('button-2', 'n_clicks')]
+)
+def handle_submission(m_clicks, mm_clicks):
+    if (m_clicks is not None and m_clicks > 0) or (mm_clicks is not None and mm_clicks > 0):
+        # Perform actions with the submitted data
+        # For example, save the data to a database or perform calculations
+        # print("Form submitted!")
+        # Reset the button to prevent multiple submissions
+        return {'display': 'block',
+                'color': 'red',
+                'font-size': '30px',
+                'margin': 'center'}
+    else:
+        return {'display': 'none'}
 
 # @callback(
 #     [Output('store-data', 'data')],

@@ -26,10 +26,10 @@ app.layout = html.Div(
             ],
             className="banner row",
         ),
-        html.Div([
-            dcc.Link(page['name'] + "  |  ", href=page['path'])
-            for page in dash.page_registry.values()
-        ]),
+        # html.Div([
+        #     dcc.Link(page['name'] + "  |  ", href=page['path'])
+        #     for page in dash.page_registry.values()
+        # ]),
         html.Hr(),
         html.Div(
             style={'position': 'fixed', 'bottom': '10px', 'right': '10px'},

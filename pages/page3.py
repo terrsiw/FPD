@@ -10,6 +10,7 @@ from dash import callback, Input, Output
 from dash import dcc, html
 from dash.exceptions import PreventUpdate
 import psycopg2
+from datetime import date
 
 from Second import *
 
@@ -27,11 +28,13 @@ conn = psycopg2.connect(
 def save_data_to_database(data):
     # Insert data into the database
     cursor = conn.cursor()
-    insert_query = "INSERT INTO my_table (gender, age_category, rate_graph, rate_app, rate_theory, rate_usage, rate_rec, comment, data, date_saved," \
+    insert_query = "INSERT INTO my_table (gender, age_category, rate_graph, rate_app, rate_theory, rate_usage, " \
+                   "comment, data, date_saved," \
                    "email) VALUES (%s, %s)"
-    cursor.execute(insert_query, (data['data'], data['age'], data['gender'], data['email'],data['likability'],
-                                  data['comments'], data['app_rate'], data['theory_rate'],
-                                  data['usage_rate']))
+    cursor.execute(insert_query, (data['gender'], data['age'], data['likability'], data['app_rate'],
+                                  data['theory_rate'], data['usage_rate'], data['comments'],
+                                  data['data'], data['today'], data['email']
+                                 ))
     conn.commit()
     cursor.close()
 
@@ -237,7 +240,7 @@ layout = html.Div([
 def store_personal_info(n_clicks, data, age, gender, email, likability, comments, app_rate, theory_rate,
                         usage_rate):
     if n_clicks > 0 and n_clicks is not None:
-
+        today = date.today()
         data2 = {
             'data': data,
             'age': age,
@@ -247,11 +250,13 @@ def store_personal_info(n_clicks, data, age, gender, email, likability, comments
             'comments': comments,
             'app_rate': app_rate,
             'theory_rate': theory_rate,
-            'usage_rate': usage_rate
+            'usage_rate': usage_rate,
+            'today_date': today
         }
         save_data_to_database(data2)
         return 'Data saved to database'
-    return ''
+    else:
+        raise PreventUpdate
     # try:
     #     # Assuming you have a table named 'data' with appropriate columns in your database
     #     cursor.execute("INSERT INTO data (column1, column2, ...) VALUES (?, ?, ...)",
@@ -266,19 +271,19 @@ def store_personal_info(n_clicks, data, age, gender, email, likability, comments
     #     raise PreventUpdate
 
 
-@callback(
-    dash.dependencies.Output('submit-button', 'style'),
-    dash.dependencies.Input('submit-button', 'n_clicks')
-)
-def handle_submission(n_clicks):
-    if n_clicks > 0:
-        # Perform actions with the submitted data
-        # For example, save the data to a database or perform calculations
-        print("Form submitted!")
-        # Reset the button to prevent multiple submissions
-        return {'display': 'none'}
-    else:
-        return {'display': 'block'}
+# @callback(
+#     dash.dependencies.Output('submit-button', 'style'),
+#     dash.dependencies.Input('submit-button', 'n_clicks')
+# )
+# def handle_submission(n_clicks):
+#     if n_clicks > 0:
+#         # Perform actions with the submitted data
+#         # For example, save the data to a database or perform calculations
+#         #print("Form submitted!")
+#         # Reset the button to prevent multiple submissions
+#         return {'display': 'none'}
+#     else:
+#         return {'display': 'block'}
 
 
 @callback(
