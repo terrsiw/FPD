@@ -26,11 +26,32 @@ app.layout = html.Div(
             ],
             className="banner row",
         ),
-        # html.Div([
-        #     dcc.Link(page['name'] + "  |  ", href=page['path'])
-        #     for page in dash.page_registry.values()
-        # ]),
+        html.Div([
+            dcc.Link(page['name'] + "  |  ", href=page['path'])
+            for page in dash.page_registry.values()
+        ]),
         html.Hr(),
+        html.Div(
+            style={'position': 'fixed', 'bottom': '10px', 'right': '10px'},
+            children=[
+                html.Div('© 2023 Tereza Sivakova'),
+                html.Div('Email: sivakter@cvut.cz')
+            ]
+        ),
+        html.Div(
+            id="acknowledgment",
+            children=[
+                html.P("Special thanks to Marko Ruman for helping with uploading the app on the server."),
+            ],
+            style={
+                "position": "fixed",
+                "bottom": "10px",
+                "left": "10px",
+                "text-align": "left",
+                "font-size": "12px",
+                "color": "gray",
+            },
+        ),
 
         # content of each page
         dash.page_container
