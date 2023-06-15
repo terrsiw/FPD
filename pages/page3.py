@@ -30,11 +30,11 @@ def save_data_to_database(data):
     cursor = conn.cursor()
     insert_query = "INSERT INTO my_table (gender, age_category, rate_graph, rate_app, rate_theory, rate_usage, " \
                    "comment, data, date_saved," \
-                   "email) VALUES (%s, %s)"
+                   "email) VALUES (%s, %s,%s, %s,%s, %s,%s, %s,%s, %s)"
     cursor.execute(insert_query, (data['gender'], data['age'], data['likability'], data['app_rate'],
                                   data['theory_rate'], data['usage_rate'], data['comments'],
                                   data['data'], data['today'], data['email']
-                                 ))
+                                  ))
     conn.commit()
     cursor.close()
 
