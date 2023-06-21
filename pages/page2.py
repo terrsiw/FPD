@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import callback, Input, Output, State
+from dash import callback, Input, Output
 from dash import dcc, html
 from dash.exceptions import PreventUpdate
 
@@ -15,6 +15,7 @@ df = px.data.gapminder()
 # Initial values for calculations
 total_calculations = 25
 completed_calculations = 0
+simul_state = 'started'
 
 layout = html.Div([
 
@@ -41,13 +42,13 @@ layout = html.Div([
                                  )
                     ),
                     dbc.Col(
-                        # html.Div(id='link-container',
-                        #          children=[
-                        dcc.Link('See the final results', href='/page3'),
-                        # ],
-                        # style={'display': 'none'}
-                        # style={'text-align': 'right', 'margin-right': '20px'}
-                        # )
+                        html.Div(id='link-container',
+                                 children=[
+                                     dcc.Link('See the final results', href='/page3'),
+                                 ],
+                                 style={'display': 'none'}
+                                 # style={'text-align': 'right', 'margin-right': '20px'}
+                                 )
                     ),
                     dbc.Col(
                         dbc.Modal(
@@ -56,7 +57,7 @@ layout = html.Div([
                                 dbc.ModalBody(
                                     "You should want state number 7 and action 4, which means that you like 22 "
                                     "degrees and you want to pay as little as possible for it."
-                                    "Rate the results 25 times or click on one of the blue/red button"
+                                    "Rate the results 25 times or click on one of the green/red button"
                                     " to evaluate the results without more rating."),
                                 dbc.ModalFooter(
                                     dbc.Button("Close", id="close-button", className="ml-auto", color="secondary")
@@ -71,19 +72,19 @@ layout = html.Div([
                 ]),
             dbc.Row(
                 [
-                    dbc.Col(
-                        html.Button('Run', id='submit-val', n_clicks=0, disabled=False),
-                        # color="success", #className="mr-3",
-                        # outline=True, size="sm"
-                        # ),
-                        width="auto",
-                    ),
+                    # dbc.Col(
+                    #     html.Div(id='run-container',
+                    #              children=[
+                    #                  html.Button('Run', id='submit-val', n_clicks=0, disabled=False)
+                    #              ])
+                    #     #width="auto",
+                    # ),
                     dbc.Col(html.Div(), width="auto"),
                     dbc.Col(
                         html.Div(
                             children=[
                                 dbc.Button("I like the results and I do not want to tune parameters any more.",
-                                           id="button-1", color="info", outline=True, size="sm"),
+                                           id="button-1", color="success", outline=True, size="sm"),
                                 dbc.Button("I am bored and I do not want to rate anymore.", id="button-2",
                                            color="danger", outline=True, size="sm"),
                             ],
@@ -102,15 +103,6 @@ layout = html.Div([
     ),
 
     html.Br(),
-    # html.Div(
-    #     children=[
-    #         dbc.Row(
-    #             [
-
-    # dbc.Col(
-    #
-    # ),
-    # dbc.Col(
     html.Div(
         children=[
             html.Div(id='slider-container',
@@ -119,7 +111,8 @@ layout = html.Div([
                              [
                                  dbc.Col(
                                      html.P(
-                                         "Rate how much you like the results of states and actions for last 20 steps: ")),
+                                         "Rate how much you like the results of states and actions for last 20 steps: ")
+                                 ),
                                  dbc.Col(
                                      dcc.Slider(1, 5, 1,
                                                 value=None,
@@ -128,19 +121,25 @@ layout = html.Div([
 
                                  ),
                                  dbc.Col(
-                                     # html.Div(id='button2-container', children=[
-                                     html.Button('Leave the same mark',
-                                                 id='mark_button',
-                                                 n_clicks=0),  # ],
-                                     # style={'display': 'none'})
+                                     html.Div(id='button2-container',
+                                              children=[
+                                                  html.Button('Leave the same mark',
+                                                              id='mark_button',
+                                                              n_clicks=0)
+                                              ],
+                                              # style={'display': 'none'})
+                                              style={'display': 'block'})
                                  )
-
                              ])],
-                     style={'display': 'none',
+                     style={'display': 'block',
                             # 'justify-content': 'center',
                             # 'width': '50%',
-                            'margin': '0 auto'
-                            }
+                            'margin': '0 auto'},  # {'display': 'block'}
+                     # style={'display': 'none',
+                     #        # 'justify-content': 'center',
+                     #        # 'width': '50%',
+                     #        'margin': '0 auto'
+                     #        }
                      )],
         style={'margin-left': '1cm'}
 
@@ -194,6 +193,7 @@ layout = html.Div([
         dcc.Graph(id='plot_actions'),
         style={'width': '50%', 'display': 'inline-block'}),
     # dcc.Store(id='my-data-store', storage_type='memory')
+    # dcc.Input(id='simulation-state', type='hidden', value='started'),
     dcc.Store(id='store-data', data=[], storage_type='memory'),
     # dcc.Location(id='url', refresh=False),
     # dcc.Location(id='url', refresh=False)
@@ -215,22 +215,22 @@ def toggle_popup_modal(popup_clicks, close_clicks, is_open):
 
 
 @callback(
-    [Output('store-data', 'data'),
-     Output('submit-val', 'disabled'),
-     Output('text-container', 'style'),
-     # Output('link-container', 'style')
-     ],
-    [Input('submit-val', 'n_clicks'),
+    [
+        Output('store-data', 'data'),
+        Output('text-container', 'style')
+        # Output('link-container', 'style')
+    ],
+    [Input('store-data', 'data'),
+     # Input('simulation-state', 'value'),
      Input('my_slider', 'value'),
      Input('mark_button', 'n_clicks'),  # Input('url', 'pathname')
      Input('button-1', 'n_clicks'),
-     Input('button-2', 'n_clicks'),
-     Input('store-data', 'data')]
+     Input('button-2', 'n_clicks')]
 )
-def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
+def store_data(data, value, mark_clicks, m_clicks, mm_clicks):
     ctx = dash.callback_context
     triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
-    if n_clicks is not None and n_clicks != 0 and not data and value is None and \
+    if simul_state == 'started' and not data and value is None and \
             (m_clicks is None or m_clicks == 0) and (mm_clicks is None or mm_clicks == 0):
         var_init = initialization(500, "FALSE", 20)
         system = var_init[0]
@@ -274,9 +274,9 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
                           data1_actions,
                           data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V, why]
 
-        return obj_store_data, True, {'display': 'none'}  # ,{'display': 'none'}
+        return [obj_store_data, {'display': 'none'}]  # {'display': 'none'}]
 
-    elif n_clicks is not None and n_clicks != 0 and data and value is not None and (
+    elif simul_state == 'started' and data and value is not None and (
             m_clicks == 0 or m_clicks is None) and \
             (mm_clicks == 0 or mm_clicks is None):
         if triggered_component == 'my_slider' or (triggered_component == 'mark_button' and mark_clicks > 0):
@@ -362,9 +362,9 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
             obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states,
                               data1_actions,
                               data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V, why]
-            return obj_store_data, True, {'display': 'none'}  # , {'display': 'none'}
+            return [obj_store_data, {'display': 'none'}]  # , {'display': 'none'}]
 
-    elif n_clicks is not None and n_clicks != 0 and data and value is not None and \
+    elif simul_state == 'started' and data and value is not None and \
             (m_clicks is not None and m_clicks != 0) or (mm_clicks is not None and mm_clicks != 0):
         if (triggered_component == 'button-1' and m_clicks > 0) or (
                 triggered_component == 'button-2' and mm_clicks > 0):
@@ -425,6 +425,8 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
             user_r = user.r
             user_V = user.V
 
+            why = None
+
             if m_clicks > 0:
                 why = ['liked it']
             elif mm_clicks > 0:
@@ -434,12 +436,11 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
                               data1_actions,
                               data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V, why]
 
-            return obj_store_data, True, {'display': 'block', 'color': 'red', 'font-size': '30px',
-                                          'margin': 'center'}  # {
-            # 'text-align': 'right', 'margin-right': '20px'}
-
+            return [obj_store_data, {'display': 'block', 'color': 'red', 'font-size': '30px',
+                                     'margin': 'center'}]  # {'text-align': 'right', 'margin-right': '20px'}]
     else:
         raise PreventUpdate
+    return PreventUpdate
 
 
 # @callback(
@@ -457,9 +458,9 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
     Output(component_id='bar_hist_actions', component_property='figure'),
     Output(component_id='slider-container', component_property='style'),
     # Output(component_id='button-container', component_property='style'),
-    # Output(component_id='button2-container', component_property='style')
+    Output(component_id='button2-container', component_property='style'),
     Output("progress-value", "children"),
-    # Output('link-container', 'style')
+    Output('link-container', 'style')
 ],
     [Input('store-data', 'data')]
     # [Input(component_id='my_slider', component_property='value')]
@@ -509,19 +510,28 @@ def update_figure(data):
             bar_hist_states = px.bar(df_s, x='States', y='Number of states')
             bar_hist_actions = px.bar(df_a, x='Actions', y='Number of actions')
 
-            bar_hist_states.update_layout(transition_duration=500)
-            bar_hist_actions.update_layout(transition_duration=500)
+            bar_hist_states.update_layout(title='Number of each state in last 20 time steps',
+                                          transition_duration=500)
+            bar_hist_actions.update_layout(title='Number of each action in last 20 time steps',
+                                           transition_duration=500)
 
             completed = data1.t
 
-            return [bar_hist_states, bar_hist_actions, {'display': 'block',
-                                                        # 'justify-content': 'center',
-                                                        # 'width': '50%',
-                                                        'margin': '0 auto'},  # {'display': 'block'}
-
+            return [bar_hist_states, bar_hist_actions,
+                    {'display': 'block',
+                     # 'justify-content': 'center',
+                     # 'width': '50%',
+                     'margin': '0 auto'},
+                    {'display': 'block',
+                     # 'justify-content': 'center',
+                     # 'width': '50%',
+                     'margin': '0 auto'},
+                    # {'display': 'block',
+                    #                                             # 'justify-content': 'center',
+                    #                                             # 'width': '50%',
+                    #                                             'margin': '0 auto'},  # {'display': 'block'}
                     f"{completed} out of {total_calculations}",
-                    # {'display': 'none'}
-
+                    {'display': 'none'}
                     ]
         elif data[14] >= 25 or data[21] == ["liked it"] or data[21] == ['bored']:
             var_init = initialization(500, "FALSE", 20)
@@ -572,17 +582,19 @@ def update_figure(data):
                                            transition_duration=500)
 
             completed = 25
-            return [bar_hist_states, bar_hist_actions, {'display': 'none',
-                                                        # 'justify-content': 'center',
-                                                        # 'width': '50%',
-                                                        'margin': '0 auto'},  # {'display': 'block'}
-
+            return [bar_hist_states, bar_hist_actions, {'display': 'none'},
+                    {'display': 'none'},
                     f"{completed} out of {total_calculations}",
-                    # {'text-align': 'right', 'margin-right': '20px'}
-                    ]
-
+                    {'text-align': 'right', 'margin-right': '20px'}]
     else:
         PreventUpdate
+
+# {'display': 'none',
+#                                     # 'justify-content': 'center',
+#                                     # 'width': '50%',
+#                                     'margin': '0 auto'},  # {'display': 'block'}
+# else:
+#     PreventUpdate
 
 
 @callback([
@@ -596,7 +608,7 @@ def update_plots(data):
     if data:
         var_init = initialization(500, "FALSE", 20)
 
-        agent = var_init[1]
+        # agent = var_init[1]
         data2 = var_init[2]
         data1 = var_init[4]
 
@@ -660,6 +672,24 @@ def handle_submission(m_clicks, mm_clicks):
                 'margin': 'center'}
     else:
         return {'display': 'none'}
+
+# @callback(
+#     [
+#         Output('simulation-state', 'value'),
+#         Output('run-container', 'style')
+#     ],
+#     Input('submit-val', 'n_clicks')
+# )
+# def update_output(n_clicks):
+#     if n_clicks is not None and n_clicks > 0:
+#         # Perform initial simulation
+#         # ...
+#         # Update simulation state
+#         simulation_state = 'started'
+#
+#         return [simulation_state, {'display': 'none'}]
+#     else:
+#         raise PreventUpdate
 
 # @callback(
 #     [Output('store-data', 'data')],

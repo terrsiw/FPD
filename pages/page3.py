@@ -42,9 +42,10 @@ dash.register_page(__name__)
 
 
 layout = html.Div([
+    dcc.Store(id='store-data', storage_type='memory'),
     html.Div(
         children=[
-            dcc.Store(id='store-data', storage_type='memory'),
+
             # dcc.Location(id='url', refresh=False),
             dcc.Markdown('### These are the results with 500 time steps. You can see all states and actions that were '
                          'chosen during the decision-making process.'),
