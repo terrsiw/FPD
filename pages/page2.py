@@ -41,13 +41,14 @@ layout = html.Div([
                                  )
                     ),
                     dbc.Col(
-                        html.Div(id='link-container',
-                                 children=[
-                                     dcc.Link('See the final results', href='/page3'),
-                                 ],
-                                 style={'display': 'none'}
-                                 # style={'text-align': 'right', 'margin-right': '20px'}
-                                 )),
+                        # html.Div(id='link-container',
+                        #          children=[
+                        dcc.Link('See the final results', href='/page3'),
+                        # ],
+                        # style={'display': 'none'}
+                        # style={'text-align': 'right', 'margin-right': '20px'}
+                        # )
+                    ),
                     dbc.Col(
                         dbc.Modal(
                             [
@@ -194,8 +195,8 @@ layout = html.Div([
         style={'width': '50%', 'display': 'inline-block'}),
     # dcc.Store(id='my-data-store', storage_type='memory')
     dcc.Store(id='store-data', data=[], storage_type='memory'),
-    dcc.Location(id='url', refresh=False)
-    # dcc.Location(id='url', refresh=True)
+    # dcc.Location(id='url', refresh=False),
+    # dcc.Location(id='url', refresh=False)
     # dcc.Store(id='store-data2', data=[], storage_type='memory')
 
 ]
@@ -217,20 +218,20 @@ def toggle_popup_modal(popup_clicks, close_clicks, is_open):
     [Output('store-data', 'data'),
      Output('submit-val', 'disabled'),
      Output('text-container', 'style'),
-     Output('link-container', 'style')
+     # Output('link-container', 'style')
      ],
     [Input('submit-val', 'n_clicks'),
      Input('my_slider', 'value'),
      Input('mark_button', 'n_clicks'),  # Input('url', 'pathname')
      Input('button-1', 'n_clicks'),
-     Input('button-2', 'n_clicks')
-     ],
-    [State('store-data', 'data')]
+     Input('button-2', 'n_clicks'),
+     Input('store-data', 'data')]
 )
 def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
     ctx = dash.callback_context
     triggered_component = ctx.triggered[0]['prop_id'].split('.')[0]
-    if n_clicks is not None and n_clicks != 0 and not data and value is None:
+    if n_clicks is not None and n_clicks != 0 and not data and value is None and \
+            (m_clicks is None or m_clicks == 0) and (mm_clicks is None or mm_clicks == 0):
         var_init = initialization(500, "FALSE", 20)
         system = var_init[0]
         agent = var_init[1]
@@ -273,7 +274,7 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
                           data1_actions,
                           data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V, why]
 
-        return obj_store_data, True, {'display': 'none'}, {'display': 'none'}
+        return obj_store_data, True, {'display': 'none'}  # ,{'display': 'none'}
 
     elif n_clicks is not None and n_clicks != 0 and data and value is not None and (
             m_clicks == 0 or m_clicks is None) and \
@@ -361,84 +362,81 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
             obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states,
                               data1_actions,
                               data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V, why]
-            return obj_store_data, True, {'display': 'none'}, {'display': 'none'}
+            return obj_store_data, True, {'display': 'none'}  # , {'display': 'none'}
 
     elif n_clicks is not None and n_clicks != 0 and data and value is not None and \
             (m_clicks is not None and m_clicks != 0) or (mm_clicks is not None and mm_clicks != 0):
-        var_init = initialization(500, "FALSE", 20)
-        system = var_init[0]
-        agent = var_init[1]
-        data2 = var_init[2]
-        user = var_init[3]
-        data1 = var_init[4]
+        if (triggered_component == 'button-1' and m_clicks > 0) or (
+                triggered_component == 'button-2' and mm_clicks > 0):
+            var_init = initialization(500, "FALSE", 20)
+            system = var_init[0]
+            agent = var_init[1]
+            data2 = var_init[2]
+            user = var_init[3]
+            data1 = var_init[4]
 
-        agent.w = data[0]
-        agent.nu = data[1]
-        agent.gam = np.array(data[2])
-        agent.model = np.array(data[3])
-        agent.mi = np.array(data[4])
-        agent.ri = np.array(data[5])
-        agent.r = np.array(data[6])
-        agent.V = np.array(data[7])
-        data2.states = data[8]
-        data2.actions = data[9]
-        data2.t = data[10]
-        data1.states = data[11]
-        data1.actions = data[12]
-        data1.marks = data[13]
-        data1.t = data[14]
-        user.gam = np.array(data[15])
-        user.model = np.array(data[16])
-        user.mi = np.array(data[17])
-        user.ri = np.array(data[18])
-        user.r = np.array(data[19])
-        user.V = np.array(data[20])
+            agent.w = data[0]
+            agent.nu = data[1]
+            agent.gam = np.array(data[2])
+            agent.model = np.array(data[3])
+            agent.mi = np.array(data[4])
+            agent.ri = np.array(data[5])
+            agent.r = np.array(data[6])
+            agent.V = np.array(data[7])
+            data2.states = data[8]
+            data2.actions = data[9]
+            data2.t = data[10]
+            data1.states = data[11]
+            data1.actions = data[12]
+            data1.marks = data[13]
+            data1.t = data[14]
+            user.gam = np.array(data[15])
+            user.model = np.array(data[16])
+            user.mi = np.array(data[17])
+            user.ri = np.array(data[18])
+            user.r = np.array(data[19])
+            user.V = np.array(data[20])
 
-        while data2.t <= data2.length_sim:
-            agent.calculate_alfa()
-            data2 = system.generate(agent, data2)
-            agent.learn(data2)
+            while data2.t <= data2.length_sim:
+                agent.calculate_alfa()
+                data2 = system.generate(agent, data2)
+                agent.learn(data2)
 
-        w = agent.w
-        # s0 = data2.states[data2.t]
-        nu = agent.nu
-        gam = agent.gam
-        model = agent.model
-        mi = agent.mi
-        ri = agent.ri
-        r = agent.r
-        V = agent.V
-        data_states = data2.states
-        data_actions = data2.actions
-        data_t = data2.t
-        data1_states = data1.states
-        data1_actions = data1.actions
-        data1_marks = data1.marks
-        data1_t = data1.t
-        user_gam = user.gam
-        user_model = user.model
-        user_mi = user.mi
-        user_ri = user.ri
-        user_r = user.r
-        user_V = user.V
+            w = agent.w
+            # s0 = data2.states[data2.t]
+            nu = agent.nu
+            gam = agent.gam
+            model = agent.model
+            mi = agent.mi
+            ri = agent.ri
+            r = agent.r
+            V = agent.V
+            data_states = data2.states
+            data_actions = data2.actions
+            data_t = data2.t
+            data1_states = data1.states
+            data1_actions = data1.actions
+            data1_marks = data1.marks
+            data1_t = data1.t
+            user_gam = user.gam
+            user_model = user.model
+            user_mi = user.mi
+            user_ri = user.ri
+            user_r = user.r
+            user_V = user.V
 
-        if m_clicks > 0:
-            why = "liked it"
-        elif mm_clicks > 0:
-            why = "bored"
+            if m_clicks > 0:
+                why = ['liked it']
+            elif mm_clicks > 0:
+                why = ['bored']
 
-        obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states,
-                          data1_actions,
-                          data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V, why]
+            obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states,
+                              data1_actions,
+                              data1_marks, data1_t, user_gam, user_model, user_mi, user_ri, user_r, user_V, why]
 
-        return [obj_store_data,
-                True,
-                {'display': 'block',
-                 'color': 'red',
-                 'font-size': '30px',
-                 'margin': 'center'},
-                {'text-align': 'right',
-                 'margin-right': '20px'}]
+            return obj_store_data, True, {'display': 'block', 'color': 'red', 'font-size': '30px',
+                                          'margin': 'center'}  # {
+            # 'text-align': 'right', 'margin-right': '20px'}
 
     else:
         raise PreventUpdate
@@ -461,13 +459,14 @@ def store_data(n_clicks, value, mark_clicks, m_clicks, mm_clicks, data):
     # Output(component_id='button-container', component_property='style'),
     # Output(component_id='button2-container', component_property='style')
     Output("progress-value", "children"),
+    # Output('link-container', 'style')
 ],
     [Input('store-data', 'data')]
     # [Input(component_id='my_slider', component_property='value')]
 )
 def update_figure(data):
     if data:
-        if data[14] < 25:
+        if data[14] < 24 and data[21] == "None":
             var_init = initialization(500, "FALSE", 20)
 
             agent = var_init[1]
@@ -520,9 +519,11 @@ def update_figure(data):
                                                         # 'width': '50%',
                                                         'margin': '0 auto'},  # {'display': 'block'}
 
-                    f"{completed} out of {total_calculations}"
+                    f"{completed} out of {total_calculations}",
+                    # {'display': 'none'}
+
                     ]
-        else:
+        elif data[14] >= 25 or data[21] == ["liked it"] or data[21] == ['bored']:
             var_init = initialization(500, "FALSE", 20)
 
             agent = var_init[1]
@@ -570,17 +571,18 @@ def update_figure(data):
             bar_hist_actions.update_layout(title='Number of each action in last 20 time steps',
                                            transition_duration=500)
 
-            completed = data1.t
+            completed = 25
             return [bar_hist_states, bar_hist_actions, {'display': 'none',
                                                         # 'justify-content': 'center',
                                                         # 'width': '50%',
                                                         'margin': '0 auto'},  # {'display': 'block'}
 
-                    f"{completed} out of {total_calculations}"
+                    f"{completed} out of {total_calculations}",
+                    # {'text-align': 'right', 'margin-right': '20px'}
                     ]
 
     else:
-        return {}
+        PreventUpdate
 
 
 @callback([

@@ -9,47 +9,49 @@ import plotly.express as px
 from dash import callback, Input, Output
 from dash import dcc, html
 from dash.exceptions import PreventUpdate
-import psycopg2
+# import psycopg2
 from datetime import date
 
 from Second import *
 
 dash.register_page(__name__)
 
-conn = psycopg2.connect(
-    host="postgresql.r2.websupport.sk",
-    port=5432,
-    user="tereza_sivakova",
-    password="tereza_sivakovaUTIA123",
-    database="tereza_sivakova"
-)
+# conn = psycopg2.connect(
+#     host="postgresql.r2.websupport.sk",
+#     port=5432,
+#     user="tereza_sivakova",
+#     password="tereza_sivakovaUTIA123",
+#     database="tereza_sivakova"
+# )
 
 
-def save_data_to_database(data):
-    # Insert data into the database
-    cursor = conn.cursor()
-    insert_query = "INSERT INTO my_table (gender, age_category, rate_graph, rate_app, rate_theory, rate_usage, " \
-                   "comment, data, date_saved," \
-                   "email) VALUES (%s, %s,%s, %s,%s, %s,%s, %s,%s, %s)"
-    cursor.execute(insert_query, (data['gender'], data['age'], data['likability'], data['app_rate'],
-                                  data['theory_rate'], data['usage_rate'], data['comments'],
-                                  data['data'], data['today'], data['email']
-                                  ))
-    conn.commit()
-    cursor.close()
+# def save_data_to_database(data):
+#     # Insert data into the database
+#     cursor = conn.cursor()
+#     insert_query = "INSERT INTO my_table (gender, age_category, rate_graph, rate_app, rate_theory, rate_usage, " \
+#                    "comment, data, date_saved," \
+#                    "email) VALUES (%s, %s,%s, %s,%s, %s,%s, %s,%s, %s)"
+#     cursor.execute(insert_query, (data.get('gender', None), data.get('age', None), data.get('likability', None),
+#                                   data.get('app_rate', None),
+#                                   data.get('theory_rate', None), data.get('usage_rate', None),
+#                                   data.get('comments', None),
+#                                   data.get('data', None), data.get('today', None), data.get('email', None)
+#                                   ))
+#     conn.commit()
+#     cursor.close()
 
 
 layout = html.Div([
     html.Div(
         children=[
-
+            dcc.Store(id='store-data', storage_type='memory'),
+            # dcc.Location(id='url', refresh=False),
             dcc.Markdown('### These are the results with 500 time steps. You can see all states and actions that were '
                          'chosen during the decision-making process.'),
             html.Br(),
             html.Button("Show the final results", id='update-button', n_clicks=0),
             # html.Div(id='plots-container'),
-            dcc.Store(id='store-data', storage_type='memory'),
-            dcc.Store(id='store-data2', storage_type='memory'),
+            # dcc.Store(id='store-data2', storage_type='memory'),
             html.Br(),
             html.Div(
                 dcc.Graph(id='bar_hist_all_states'),
@@ -214,7 +216,9 @@ layout = html.Div([
                                         style={'display': 'block', 'margin': 'center'}),
                         ]
                     ),
-                    html.Div(id='output-div')
+                    html.Div(id='output-div',
+                             children=[
+                                 html.P("The data are saved.")])
                 ])
         ],
         style={'margin-left': '1cm'}
@@ -225,8 +229,8 @@ layout = html.Div([
 
 @callback(
     [Output('output-div', 'children')],
-    [Input('submit-button', 'n_clicks'),
-     State('store-data', 'data'),
+    [Input('submit-button', 'n_clicks')],
+    [State('store-data', 'data'),
      State('age-checkbox', 'value'),
      State('gender-radio', 'value'),
      State('email', 'value'),
@@ -237,12 +241,12 @@ layout = html.Div([
      State('usage-rating-slider', 'value')
      ]
 )
-def store_personal_info(n_clicks, data, age, gender, email, likability, comments, app_rate, theory_rate,
+def store_personal_info(n_clicks, data1, age, gender, email, likability, comments, app_rate, theory_rate,
                         usage_rate):
     if n_clicks > 0 and n_clicks is not None:
         today = date.today()
         data2 = {
-            'data': data,
+            'data': data1,
             'age': age,
             'gender': gender,
             'email': email,
@@ -253,7 +257,8 @@ def store_personal_info(n_clicks, data, age, gender, email, likability, comments
             'usage_rate': usage_rate,
             'today_date': today
         }
-        save_data_to_database(data2)
+        # save_data_to_database(data2)
+        print(data1)
         return 'Data saved to database'
     else:
         raise PreventUpdate
@@ -290,8 +295,10 @@ def store_personal_info(n_clicks, data, age, gender, email, likability, comments
     [Output(component_id='bar_hist_all_states', component_property='figure'),
      Output(component_id='bar_hist_all_actions', component_property='figure')
      ],
-    [Input('update-button', 'n_clicks')],
-    [State('store-data', 'data')]
+    [
+        Input('update-button', 'n_clicks'),
+        Input('store-data', 'data')
+    ]
 )
 def display_graph(d_clicks, data):
     # if pathname == '/page3':
@@ -350,3 +357,4 @@ def display_graph(d_clicks, data):
 
     else:
         raise PreventUpdate
+

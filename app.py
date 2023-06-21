@@ -31,6 +31,7 @@ app.layout = html.Div(
         #     for page in dash.page_registry.values()
         # ]),
         html.Hr(),
+        # dcc.Store(id='store-data', data=[], storage_type='memory'),
         html.Div(
             style={'position': 'fixed', 'bottom': '10px', 'right': '10px'},
             children=[
