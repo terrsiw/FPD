@@ -51,6 +51,7 @@ app.layout = html.Div(
                 "text-align": "left",
                 "font-size": "12px",
                 "color": "gray",
+                # "height": "800px"
             },
         ),
 

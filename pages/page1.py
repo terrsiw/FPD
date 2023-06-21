@@ -1,15 +1,23 @@
 import dash
 from dash import dcc, html
 import plotly.express as px
+import os
 
 dash.register_page(__name__, path='/')
 
 df = px.data.gapminder()
+# current_directory = os.path.dirname(os.path.abspath(__file__))
+# subdirectory = os.path.join(current_directory, 'subdirectory')
+# image_path = os.path.join(subdirectory, 'fig.jpg')
 
 layout = html.Div([
     html.Div(
         children=[
             html.H3('Description of the application'),
+            html.Div(
+                dcc.Link('I am ready to rate the graphs', href='/page2'),
+                style={'text-align': 'right', 'margin-right': '20px'}
+            ),
             html.Div([
                 html.P('Hi everyone,'),
                 html.P('my name is Tereza Sivakova and this web application is a part of my doctoral thesis.'),
@@ -27,7 +35,8 @@ layout = html.Div([
                        "different people think of the same problem."),
                 html.P("Imagine it is winter and you want to have 22 degrees in your living-room, but on the other "
                        "hand you want to spend as less money as possible."
-                       " Now it's up to you which of these preferences you lean towards."),
+                       "Now it's up to you which of these preferences you lean towards."),
+                # html.Img(src='./fig.jpg'),
                 html.P("We will show you results of states (degrees) and actions (heating/coaling) in a room in every "
                        "20 times steps and we want you to rate the"
                        "results as you liked them as at school with marks 1 to 5."),
@@ -47,11 +56,11 @@ layout = html.Div([
                     "And, please, try to rate to the best of your knowledge and conscience. "),
                 html.P(
                     "If you would have any questions, please, do not hesitate to contact me via email."),
+                html.Br(),
+                html.Br(),
+                html.Br()
             ]),
-            html.Div(
-                dcc.Link('I am ready to rate the graphs', href='/page2'),
-                style={'text-align': 'right', 'margin-right': '20px'}
-            ),
+
             # html.Div(
             #     style={'position': 'fixed', 'bottom': '10px', 'right': '10px'},
             #     children=[
@@ -74,7 +83,7 @@ layout = html.Div([
             #     },
             # ),
         ],
-        style={'margin-left': '1cm'}
+        style={'margin-left': '1cm', "margin-bottom": "2 cm"}
     ),
 ]
 )

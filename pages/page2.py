@@ -21,18 +21,8 @@ layout = html.Div([
 
     html.Div(
         children=[
-
             dbc.Row(
                 [
-                    dbc.Col(
-                        dbc.Button(
-                            "Remind me rules",
-                            id="popup-button",
-                            color="primary",
-                            className="mr-3",
-                            outline=True,
-                            size="sm",
-                        )),
                     dbc.Col(
                         html.Div(id='text-container',
                                  children=[
@@ -49,7 +39,27 @@ layout = html.Div([
                                  style={'display': 'none'}
                                  # style={'text-align': 'right', 'margin-right': '20px'}
                                  )
-                    ),
+                    )]),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        dbc.Button(
+                            "Remind me the rules",
+                            id="popup-button",
+                            color="primary",
+                            className="mr-3",
+                            outline=True,
+                            size="sm",
+                        )),
+                    # dbc.Col(
+                    #     html.Div(id='text-container',
+                    #              children=[
+                    #                  html.P("Please, navigate to other page."),
+                    #              ],
+                    #              style={'display': 'none'}
+                    #              )
+                    # ),
+
                     dbc.Col(
                         dbc.Modal(
                             [
@@ -456,9 +466,6 @@ def store_data(data, value, mark_clicks, m_clicks, mm_clicks):
 @callback([
     Output(component_id='bar_hist_states', component_property='figure'),
     Output(component_id='bar_hist_actions', component_property='figure'),
-    Output(component_id='slider-container', component_property='style'),
-    # Output(component_id='button-container', component_property='style'),
-    Output(component_id='button2-container', component_property='style'),
     Output("progress-value", "children"),
     Output('link-container', 'style')
 ],
@@ -518,18 +525,6 @@ def update_figure(data):
             completed = data1.t
 
             return [bar_hist_states, bar_hist_actions,
-                    {'display': 'block',
-                     # 'justify-content': 'center',
-                     # 'width': '50%',
-                     'margin': '0 auto'},
-                    {'display': 'block',
-                     # 'justify-content': 'center',
-                     # 'width': '50%',
-                     'margin': '0 auto'},
-                    # {'display': 'block',
-                    #                                             # 'justify-content': 'center',
-                    #                                             # 'width': '50%',
-                    #                                             'margin': '0 auto'},  # {'display': 'block'}
                     f"{completed} out of {total_calculations}",
                     {'display': 'none'}
                     ]
@@ -582,12 +577,12 @@ def update_figure(data):
                                            transition_duration=500)
 
             completed = 25
-            return [bar_hist_states, bar_hist_actions, {'display': 'none'},
-                    {'display': 'none'},
+            return [bar_hist_states, bar_hist_actions,
                     f"{completed} out of {total_calculations}",
                     {'text-align': 'right', 'margin-right': '20px'}]
     else:
         PreventUpdate
+
 
 # {'display': 'none',
 #                                     # 'justify-content': 'center',
@@ -641,13 +636,13 @@ def update_plots(data):
         plot_states.update_layout(title='Evolution of states in time',
                                   xaxis_title='Time steps',
                                   yaxis_title='States',
-                                  yaxis={'range': [-1, 14], 'fixedrange': True}
+                                  yaxis={'range': [-1, 15], 'fixedrange': True}
                                   )
         plot_actions.update_layout(transition_duration=500)
         plot_actions.update_layout(title='Evolution of actions in time',
                                    xaxis_title='Time steps',
                                    yaxis_title='Actions',
-                                   yaxis={'range': [-1, 7], 'fixedrange': True}
+                                   yaxis={'range': [-1, 8], 'fixedrange': True}
                                    )
 
         return [plot_states, plot_actions]
@@ -656,7 +651,16 @@ def update_plots(data):
 
 
 @callback(
-    Output('text-wait', 'style'),
+    [
+        Output('text-wait', 'style'),
+        Output(component_id='slider-container', component_property='style'),
+        # Output(component_id='button-container', component_property='style'),
+        Output(component_id='button2-container', component_property='style'),
+        Output("button-1", "style"),
+        Output("button-1", "disabled"),
+        Output("button-2", "style"),
+        Output("button-2", "disabled")
+    ],
     [Input('button-1', 'n_clicks'),
      Input('button-2', 'n_clicks')]
 )
@@ -666,12 +670,17 @@ def handle_submission(m_clicks, mm_clicks):
         # For example, save the data to a database or perform calculations
         # print("Form submitted!")
         # Reset the button to prevent multiple submissions
-        return {'display': 'block',
-                'color': 'red',
-                'font-size': '30px',
-                'margin': 'center'}
+        return [{'display': 'block',
+                 'color': 'red',
+                 'font-size': '30px',
+                 'margin': 'center'},
+                {'display': 'none'},
+                {'display': 'none'},
+                {"background-color": "black"}, True,
+                {"background-color": "black"}, True]
     else:
-        return {'display': 'none'}
+        raise PreventUpdate
+
 
 # @callback(
 #     [

@@ -348,8 +348,10 @@ def display_graph(d_clicks, data):
         fig_states = px.bar(df_s, x='States', y='Number of states')
         fig_actions = px.bar(df_a, x='Actions', y='Number of actions')
 
-        fig_states.update_layout(transition_duration=500)
-        fig_actions.update_layout(transition_duration=500)
+        fig_states.update_layout(title='Number of each state in last 20 time steps',
+                                 transition_duration=500)
+        fig_actions.update_layout(title='Number of each action in last 20 time steps',
+                                  transition_duration=500)
 
         # bar_plot1 = dcc.Graph(figure=bar_hist_states)
         # bar_plot2 = dcc.Graph(figure=bar_hist_actions)
