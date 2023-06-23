@@ -1,6 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+import datetime
 import plotly.graph_objs as go
 from flask_sqlalchemy import SQLAlchemy as _BaseSQLAlchemy
 from dash.dependencies import Input, Output, State
@@ -37,7 +38,9 @@ dash.register_page(__name__)
 
 def save_data_to_database(data):
     # print(data)
-    with open("user_data", "wb") as f:
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = "user_data_" + timestamp
+    with open(filename, "wb") as f:
         pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
     # Insert data into the database
     # cursor = conn.cursor()
@@ -231,11 +234,13 @@ layout = html.Div([
                                         style={'display': 'block', 'margin': 'center'}),
                         ]
                     ),
-                    html.Div(id='output-div',
-                             children=[
-                                 html.P("The data are saved.")
-                             ], style={'display': 'none'}),
-                ])
+                ]),
+            html.Div(id='output-div',
+                     children=[
+                         html.P("The data are saved. Thank you very much")
+                     ], style={'display': 'none'}),
+            html.Br(),
+            html.Br(),
         ],
         style={'margin-left': '1cm'}
     ),
@@ -244,7 +249,9 @@ layout = html.Div([
 
 
 @callback(
-    [Output('output-div', 'style')],
+   [Output('output-div', 'style'),
+    Output('submit-button', 'style'),
+    Output('submit-button', 'disabled')],
     [Input('submit-button', 'n_clicks')],
     [State('store-data', 'data'),
      State('age-checkbox', 'value'),
@@ -275,7 +282,8 @@ def store_personal_info(n_clicks, data1, age, gender, email, likability, comment
         }
         save_data_to_database(data2)
         # print(data1)
-        return {'display': 'block', 'text-align': 'center', 'color': 'green'} #'Data saved to database'# # 'Data saved to database'
+        return [{'display': 'block', 'color': 'red', 'font-size': '30px',
+                'margin': 'center'}, {"background-color": "green"}, True]# , 'text-align': 'center', 'color': 'green'} #'Data saved to database'# # 'Data saved to database'
     else:
         raise PreventUpdate
     # try:

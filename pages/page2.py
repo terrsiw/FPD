@@ -183,7 +183,7 @@ layout = html.Div([
     html.Br(),
     html.Div(id='text-wait',
              children=[
-                 html.P("Please, wait a while the simulation is running."),
+                 html.P("Please, wait 2 minutes the simulation is running."),
              ],
              style={'display': 'none'}
              ),
