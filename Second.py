@@ -211,6 +211,7 @@ def dnoise(pr: np.ndarray) -> int:
         le = len(pr)
         pr = np.cumsum(pr)
         pr = pr / pr[le - 1]
+        # random.seed(10)
         ru = np.random.uniform(0, 1, 1)[0]
         for i in range(le):
             if ru < pr[i]:
@@ -247,6 +248,7 @@ class System:
                 # y[t] = A * y[t - 1] + B * (a[t] - aa/2) + var * np.random.normal(0, 1, 1)
                 B_0 = b0 / (1 + y[t - 1])
                 B_1 = b1 / (1 + y[t - 1])
+                # random.seed(10)
                 y[t] = A * y[t - 1] + B_0 * (a[t] - self.aa / 2) + B_1 * (
                         a[t - 1] - self.aa / 2) + var * np.random.normal(
                     0, 1, 1)
@@ -358,11 +360,12 @@ def initialization(length_sim, create_system, length_time=None):
     w = 0
     s0 = 0
     nu = 1
-    si = 7
-    ai = np.arange(start=0, stop=7, step=1)
+    si = 6
+    ai = 4
+    #np.arange(start=0, stop=7, step=1)
     alfa = 1.2 * np.ones((aa, ss))
     sigma = 1
-    random.seed(10)
+    np.random.seed(42)
 
     system = System(ss, aa, create_system)
 

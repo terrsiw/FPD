@@ -1,8 +1,13 @@
+import random
+
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 
+
 # app = dash.Dash(__name__, use_pages=True)
+
+# random.seed(10)
 
 app = dash.Dash(
     __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}],

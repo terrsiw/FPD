@@ -2,6 +2,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
+from flask_sqlalchemy import SQLAlchemy as _BaseSQLAlchemy
 from dash.dependencies import Input, Output, State
 import dash
 import pandas as pd
@@ -16,6 +17,7 @@ from Second import *
 
 dash.register_page(__name__)
 
+
 # conn = psycopg2.connect(
 #     host="postgresql.r2.websupport.sk",
 #     port=5432,
@@ -25,20 +27,31 @@ dash.register_page(__name__)
 # )
 
 
-# def save_data_to_database(data):
-#     # Insert data into the database
-#     cursor = conn.cursor()
-#     insert_query = "INSERT INTO my_table (gender, age_category, rate_graph, rate_app, rate_theory, rate_usage, " \
-#                    "comment, data, date_saved," \
-#                    "email) VALUES (%s, %s,%s, %s,%s, %s,%s, %s,%s, %s)"
-#     cursor.execute(insert_query, (data.get('gender', None), data.get('age', None), data.get('likability', None),
-#                                   data.get('app_rate', None),
-#                                   data.get('theory_rate', None), data.get('usage_rate', None),
-#                                   data.get('comments', None),
-#                                   data.get('data', None), data.get('today', None), data.get('email', None)
-#                                   ))
-#     conn.commit()
-#     cursor.close()
+# class SQLAlchemy(_BaseSQLAlchemy):
+#     def apply_pool_defaults(self, app, options):
+#         super(SQLAlchemy, self).apply_pool_defaults(self, app, options)
+#         options["pool_pre_ping"] = True
+#
+# db = SQLAlchemy()
+
+
+def save_data_to_database(data):
+    # print(data)
+    with open("user_data", "wb") as f:
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+    # Insert data into the database
+    # cursor = conn.cursor()
+    # insert_query = "INSERT INTO my_table (gender, age_category, rate_graph, rate_app, rate_theory, rate_usage, " \
+    #                "comment, data, date_saved," \
+    #                "email) VALUES (%s, %s,%s, %s,%s, %s,%s, %s,%s, %s)"
+    # cursor.execute(insert_query, (data.get('gender', None), data.get('age', None), data.get('likability', None),
+    #                               data.get('app_rate', None),
+    #                               data.get('theory_rate', None), data.get('usage_rate', None),
+    #                               data.get('comments', None),
+    #                               data.get('data', None), data.get('today', None), data.get('email', None)
+    #                               ))
+    # conn.commit()
+    # cursor.close()
 
 
 layout = html.Div([
@@ -195,8 +208,9 @@ layout = html.Div([
                     html.Div(
                         children=[
                             html.Label("Comments :", style={'margin-bottom': '10px'}),
-                            html.P("What specifically did you like/dislike. Do you have an example from your life "
-                                   "where this theory would apply?"),
+                            html.P("What specifically did you like/dislike. Do you have another example from your life "
+                                   "where this theory could be applied elsewhere than heating?"
+                                   "If you would like to help me with programming the app, let me know."),
                             html.Div(
                                 children=[
                                     dcc.Textarea(
@@ -219,7 +233,8 @@ layout = html.Div([
                     ),
                     html.Div(id='output-div',
                              children=[
-                                 html.P("The data are saved.")])
+                                 html.P("The data are saved.")
+                             ], style={'display': 'none'}),
                 ])
         ],
         style={'margin-left': '1cm'}
@@ -229,7 +244,7 @@ layout = html.Div([
 
 
 @callback(
-    [Output('output-div', 'children')],
+    [Output('output-div', 'style')],
     [Input('submit-button', 'n_clicks')],
     [State('store-data', 'data'),
      State('age-checkbox', 'value'),
@@ -244,7 +259,7 @@ layout = html.Div([
 )
 def store_personal_info(n_clicks, data1, age, gender, email, likability, comments, app_rate, theory_rate,
                         usage_rate):
-    if n_clicks > 0 and n_clicks is not None:
+    if n_clicks is not None and n_clicks > 0:
         today = date.today()
         data2 = {
             'data': data1,
@@ -258,9 +273,9 @@ def store_personal_info(n_clicks, data1, age, gender, email, likability, comment
             'usage_rate': usage_rate,
             'today_date': today
         }
-        # save_data_to_database(data2)
-        print(data1)
-        return 'Data saved to database'
+        save_data_to_database(data2)
+        # print(data1)
+        return {'display': 'block', 'text-align': 'center', 'color': 'green'} #'Data saved to database'# # 'Data saved to database'
     else:
         raise PreventUpdate
     # try:
@@ -278,8 +293,9 @@ def store_personal_info(n_clicks, data1, age, gender, email, likability, comment
 
 
 # @callback(
-#     dash.dependencies.Output('submit-button', 'style'),
-#     dash.dependencies.Input('submit-button', 'n_clicks')
+#     [Output('submit-button', 'style'),
+#      Output('output-div', 'children')],
+#     Input('submit-button', 'n_clicks')
 # )
 # def handle_submission(n_clicks):
 #     if n_clicks > 0:
@@ -287,9 +303,9 @@ def store_personal_info(n_clicks, data1, age, gender, email, likability, comment
 #         # For example, save the data to a database or perform calculations
 #         #print("Form submitted!")
 #         # Reset the button to prevent multiple submissions
-#         return {'display': 'none'}
+#         return {'display': 'none'}, {'display': 'block', 'margin': 'center', 'color': 'green'}
 #     else:
-#         return {'display': 'block'}
+#         return {'display': 'block'}, {'display': 'none'}
 
 
 @callback(
@@ -335,29 +351,46 @@ def display_graph(d_clicks, data):
         for k in range(agent.aa):
             number_of_a[k] = np.sum(data_actions[:] == k)
 
-        data_state = {'States': list(np.arange(0, agent.ss)),
+        data_state = {'States': list(np.arange(1, agent.ss + 1)),
                       'Number of states': number_of_s}
 
-        data_action = {'Actions': list(np.arange(0, agent.aa)),
+        data_action = {'Actions': list(np.arange(1, agent.aa + 1)),
                        'Number of actions': number_of_a}
 
         df_s = pd.DataFrame(data_state)
-        # print(df_s)
         df_a = pd.DataFrame(data_action)
-        # df_s = load_object("data_states")
-        fig_states = px.bar(df_s, x='States', y='Number of states')
-        fig_actions = px.bar(df_a, x='Actions', y='Number of actions')
+
+        df_s['Color'] = ['Preferred State' if state == 7 else 'Normal State' for state in df_s['States']]
+        color_map_states = {'Preferred State': 'green', 'Normal State': 'blue'}
+
+        fig_states = px.bar(df_s, x='States', y='Number of states', color='Color',
+                            color_discrete_map=color_map_states,
+                            labels={'Color': 'State'})
 
         fig_states.update_layout(title='Number of each state in last 20 time steps',
-                                 transition_duration=500)
-        fig_actions.update_layout(title='Number of each action in last 20 time steps',
-                                  transition_duration=500)
+                                 transition_duration=500,
+                                 xaxis=dict(
+                                     tickmode='linear',  # Show all numbers on x-axis
+                                     dtick=1  # Set the tick interval to 1
+                                 ),
+                                 )
 
-        # bar_plot1 = dcc.Graph(figure=bar_hist_states)
-        # bar_plot2 = dcc.Graph(figure=bar_hist_actions)
+        df_a['Color'] = ['Preferred Action' if action == 4 else 'Normal Action' for action in df_a['Actions']]
+        color_map_action = {'Preferred Action': 'green', 'Normal Action': 'blue'}
+
+        fig_actions = px.bar(df_a, x='Actions', y='Number of actions', color='Color',
+                             color_discrete_map=color_map_action,
+                             labels={'Color': 'Action'})
+
+        fig_actions.update_layout(title='Number of each action in last 20 time steps',
+                                  transition_duration=500,
+                                  xaxis=dict(
+                                      tickmode='linear',  # Show all numbers on x-axis
+                                      dtick=1  # Set the tick interval to 1
+                                  )
+                                  )
 
         return [fig_states, fig_actions]
 
     else:
         raise PreventUpdate
-

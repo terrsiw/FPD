@@ -437,9 +437,9 @@ def store_data(data, value, mark_clicks, m_clicks, mm_clicks):
 
             why = None
 
-            if m_clicks > 0:
+            if m_clicks is not None and m_clicks > 0:
                 why = ['liked it']
-            elif mm_clicks > 0:
+            elif mm_clicks is not None and mm_clicks > 0:
                 why = ['bored']
 
             obj_store_data = [w, nu, gam, model, mi, ri, r, V, data_states, data_actions, data_t, data1_states,
@@ -504,23 +504,43 @@ def update_figure(data):
             for k in range(agent.aa):
                 number_of_a[k] = np.sum(data_actions[:] == k)
 
-            data_state = {'States': list(np.arange(0, agent.ss)),
+            data_state = {'States': list(np.arange(1, agent.ss + 1)),
                           'Number of states': number_of_s}
 
-            data_action = {'Actions': list(np.arange(0, agent.aa)),
+            data_action = {'Actions': list(np.arange(1, agent.aa + 1)),
                            'Number of actions': number_of_a}
 
             df_s = pd.DataFrame(data_state)
-            # print(df_s)
             df_a = pd.DataFrame(data_action)
-            # df_s = load_object("data_states")
-            bar_hist_states = px.bar(df_s, x='States', y='Number of states')
-            bar_hist_actions = px.bar(df_a, x='Actions', y='Number of actions')
+
+            df_s['Color'] = ['Preferred State' if state == 7 else 'Normal State' for state in df_s['States']]
+            color_map_states = {'Preferred State': 'green', 'Normal State': 'royalblue'}
+
+            df_a['Color'] = ['Preferred Action' if action == 4 else 'Normal Action' for action in df_a['Actions']]
+            color_map_action = {'Preferred Action': 'green', 'Normal Action': 'royalblue'}
+
+            bar_hist_states = px.bar(df_s, x='States', y='Number of states', color='Color',
+                                     color_discrete_map=color_map_states,
+                                     labels={'Color': 'State'})
+            bar_hist_actions = px.bar(df_a, x='Actions', y='Number of actions', color='Color',
+                                      color_discrete_map=color_map_action,
+                                      labels={'Color': 'Action'})
 
             bar_hist_states.update_layout(title='Number of each state in last 20 time steps',
-                                          transition_duration=500)
+                                          transition_duration=500,
+                                          xaxis=dict(
+                                              tickmode='linear',  # Show all numbers on x-axis
+                                              dtick=1  # Set the tick interval to 1
+                                          ),  # Adjust font size if necessary
+                                          # )
+                                          )
             bar_hist_actions.update_layout(title='Number of each action in last 20 time steps',
-                                           transition_duration=500)
+                                           transition_duration=500,
+                                           xaxis=dict(
+                                               tickmode='linear',  # Show all numbers on x-axis
+                                               dtick=1  # Set the tick interval to 1
+                                           ),
+                                           )
 
             completed = data1.t
 
@@ -558,28 +578,49 @@ def update_figure(data):
             for k in range(agent.aa):
                 number_of_a[k] = np.sum(data_actions[:] == k)
 
-            data_state = {'States': list(np.arange(0, agent.ss)),
+            data_state = {'States': list(np.arange(1, agent.ss + 1)),
                           'Number of states': number_of_s}
 
-            data_action = {'Actions': list(np.arange(0, agent.aa)),
+            data_action = {'Actions': list(np.arange(1, agent.aa + 1)),
                            'Number of actions': number_of_a}
 
             df_s = pd.DataFrame(data_state)
-            # print(df_s)
             df_a = pd.DataFrame(data_action)
-            # df_s = load_object("data_states")
-            bar_hist_states = px.bar(df_s, x='States', y='Number of states')
-            bar_hist_actions = px.bar(df_a, x='Actions', y='Number of actions')
+
+            df_s['Color'] = ['Preferred State' if state == 7 else 'Normal State' for state in df_s['States']]
+            color_map_states = {'Preferred State': 'green', 'Normal State': 'blue'}
+
+            bar_hist_states = px.bar(df_s, x='States', y='Number of states', color='Color',
+                                     color_discrete_map=color_map_states,
+                                     labels={'Color': 'State'})
 
             bar_hist_states.update_layout(title='Number of each state in last 20 time steps',
-                                          transition_duration=500)
-            bar_hist_actions.update_layout(title='Number of each action in last 20 time steps',
-                                           transition_duration=500)
+                                          transition_duration=500,
+                                          xaxis=dict(
+                                              tickmode='linear',  # Show all numbers on x-axis
+                                              dtick=1  # Set the tick interval to 1
+                                          ),
+                                          )
 
-            completed = 25
-            return [bar_hist_states, bar_hist_actions,
-                    f"{completed} out of {total_calculations}",
-                    {'text-align': 'right', 'margin-right': '20px'}]
+            df_a['Color'] = ['Preferred Action' if action == 4 else 'Normal Action' for action in df_a['Actions']]
+            color_map_action = {'Preferred Action': 'green', 'Normal Action': 'blue'}
+
+            bar_hist_actions = px.bar(df_a, x='Actions', y='Number of actions', color='Color',
+                                      color_discrete_map=color_map_action,
+                                      labels={'Color': 'Action'})
+
+            bar_hist_actions.update_layout(title='Number of each action in last 20 time steps',
+                                           transition_duration=500,
+                                           xaxis=dict(
+                                               tickmode='linear',  # Show all numbers on x-axis
+                                               dtick=1  # Set the tick interval to 1
+                                           )
+                                           )
+
+        completed = 25
+        return [bar_hist_states, bar_hist_actions,
+                f"{completed} out of {total_calculations}",
+                {'text-align': 'right', 'margin-right': '20px'}]
     else:
         PreventUpdate
 
@@ -618,31 +659,52 @@ def update_plots(data):
         data_states = data2.states[(data2.t - data1.length_sim):data2.t]
         data_actions = data2.actions[(data2.t - data1.length_sim):data2.t - 1]
 
-        data_state = {'Time steps': list(np.arange(0, 20)),
-                      'States': data_states}
+        data_states_plus = [x + 1 for x in data_states]
+        data_actions_plus = [x + 1 for x in data_actions]
 
-        data_action = {'Time steps': list(np.arange(0, 19)),
-                       'Actions': data_actions}
+        data_state = {'Time steps': list(np.arange(0, 20)),
+                      'States': data_states_plus}
 
         df_s = pd.DataFrame(data_state)
-        # print(df_s)
-        df_a = pd.DataFrame(data_action)
-        # df_s = load_object("data_states")
+        df_s['Color'] = ['Preferred State' if state == 7 else 'Normal State' for state in df_s['States']]
+        color_map_states = {'Preferred State': 'green', 'Normal State': 'blue'}
 
-        plot_states = go.Figure(data=[go.Scatter(x=df_s['Time steps'], y=df_s['States'], mode='markers')])
-        plot_actions = go.Figure(data=[go.Scatter(x=df_a['Time steps'], y=df_a['Actions'], mode='markers')])
-
-        plot_states.update_layout(transition_duration=500)
-        plot_states.update_layout(title='Evolution of states in time',
+        plot_states = px.scatter(df_s, x='Time steps', y='States', color='Color',
+                                 color_discrete_map=color_map_states)
+        # plot_states = go.Figure(data=[go.Scatter(x=df_s['Time steps'], y=df_s['States'], mode='markers')])
+        plot_states.update_layout(transition_duration=500,
+                                  title='Evolution of states in time',
                                   xaxis_title='Time steps',
                                   yaxis_title='States',
-                                  yaxis={'range': [-1, 15], 'fixedrange': True}
+                                  # yaxis={'range': [-1, 15], 'fixedrange': True}
+                                  yaxis=dict(
+                                      range=[0, 16],
+                                      tickmode='linear',  # Show all numbers on x-axis
+                                      dtick=1  # Set the tick interval to 1
                                   )
-        plot_actions.update_layout(transition_duration=500)
-        plot_actions.update_layout(title='Evolution of actions in time',
+                                  )
+
+        data_action = {'Time steps': list(np.arange(0, 19)),
+                       'Actions': data_actions_plus}
+
+        df_a = pd.DataFrame(data_action)
+
+        df_a['Color'] = ['Preferred Action' if action == 4 else 'Normal Action' for action in df_a['Actions']]
+        color_map_action = {'Preferred Action': 'green', 'Normal Action': 'blue'}
+
+        plot_actions = px.scatter(df_a, x='Time steps', y='Actions', color='Color',
+                                  color_discrete_map=color_map_action)
+
+        plot_actions.update_layout(transition_duration=500,
+                                   title='Evolution of actions in time',
                                    xaxis_title='Time steps',
                                    yaxis_title='Actions',
-                                   yaxis={'range': [-1, 8], 'fixedrange': True}
+                                   # yaxis={'range': [-1, 8], 'fixedrange': True}
+                                   yaxis=dict(
+                                       range=[0, 8],
+                                       tickmode='linear',  # Show all numbers on x-axis
+                                       dtick=1  # Set the tick interval to 1
+                                   )
                                    )
 
         return [plot_states, plot_actions]
@@ -680,7 +742,6 @@ def handle_submission(m_clicks, mm_clicks):
                 {"background-color": "black"}, True]
     else:
         raise PreventUpdate
-
 
 # @callback(
 #     [
